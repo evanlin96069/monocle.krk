@@ -11,7 +11,8 @@ typedef struct {
     VMatrix mat;
 } PortalInfo;
 
-int GetVector(KrkValue value, Vector* out) {
+int GetVector(KrkValue value, Vector* out)
+{
     KrkValue vx = krk_valueGetAttribute(value, "x");
     if (IS_NONE(vx))
         return 0;
@@ -34,7 +35,8 @@ int GetVector(KrkValue value, Vector* out) {
     return 1;
 }
 
-int GetVMatrix(KrkValue value, VMatrix* out) {
+int GetVMatrix(KrkValue value, VMatrix* out)
+{
     KrkValue vl = krk_valueGetAttribute(value, "data");
     if (IS_NONE(vl))
         return 0;
@@ -85,9 +87,9 @@ KRK_Function(create_image)
     const char* file_name;
     int y_res;
     int from_blue;
-    int order = -1;
+    KrkValue vorder = NONE_VAL();
 
-    if (!krk_parseArgs("VVzip|i",
+    if (!krk_parseArgs("VVzip|V",
                        (const char*[]){
                            "blue_portal",
                            "orange_portal",
@@ -101,34 +103,43 @@ KRK_Function(create_image)
                        &file_name,
                        &y_res,
                        &from_blue,
-                       &order)) {
+                       &vorder)) {
         return NONE_VAL();
     }
 
     PortalInfo blue, orange;
     if (!GetPortalInfo(blue_portal, &blue)) {
-        return krk_runtimeError(vm.exceptions->argumentError, "bad blue portal");
+        return krk_runtimeError(vm.exceptions->valueError, "bad blue portal");
     }
     if (!GetPortalInfo(orange_portal, &orange)) {
-        return krk_runtimeError(vm.exceptions->argumentError, "bad orange portal");
-    }
-   
-    if (blue.has_matrix && orange.has_matrix) {
-        CreateOverlayPortalImageMatrices(blue.pos,
-                                         blue.ang,
-                                         orange.pos,
-                                         orange.ang,
-                                         blue.mat,
-                                         orange.mat,
-                                         file_name,
-                                         y_res,
-                                         from_blue);
-        return NONE_VAL();
+        return krk_runtimeError(vm.exceptions->valueError, "bad orange portal");
     }
 
-    if (order != _BLUE_UPTM && order != _ORANGE_UPTM && order != _ULM) {
-        return krk_runtimeError(vm.exceptions->argumentError,
+    if (IS_NONE(vorder)) {
+        if (blue.has_matrix && orange.has_matrix) {
+            CreateOverlayPortalImageMatrices(blue.pos,
+                                             blue.ang,
+                                             orange.pos,
+                                             orange.ang,
+                                             blue.mat,
+                                             orange.mat,
+                                             file_name,
+                                             y_res,
+                                             from_blue);
+            return NONE_VAL();
+        }
+        return krk_runtimeError(vm.exceptions->valueError,
                                 "required placement order if portal matrices not provided");
+    }
+    if (!IS_INTEGER(vorder)) {
+        return krk_runtimeError(vm.exceptions->typeError,
+                                "placement order must be an integer");
+    }
+
+    int order = AS_INTEGER(vorder);
+    if (order != _BLUE_UPTM && order != _ORANGE_UPTM && order != _ULM) {
+        return krk_runtimeError(vm.exceptions->valueError,
+                                "invalid placement order");
     }
     CreateOverlayPortalImage(blue.pos, blue.ang, orange.pos, orange.ang, order, file_name, y_res, from_blue);
     return NONE_VAL();
@@ -138,9 +149,12 @@ KRK_Module(monocle)
 {
     SyncFloatingPointControlWord();
 
-    KRK_DOC(module, "@brief monocle module.");
+    KRK_DOC(module, "@brief Reproducing the Vertical Angle Glitch (VAG) bug in Portal.");
 
-    BIND_FUNC(module, create_image);
+    KRK_DOC(BIND_FUNC(module, create_image),
+            "@brief Create overlay portal image.\n"
+            "@arguments blue_portal, orange_portal, file_name, y_res, from_blue, order=None.\n\n"
+            "If order not provided, blue_portal and orange_portal must have matrix_this_to_linked.");
 
 #define DO_INT(name) krk_attachNamedValue(&module->fields, #name, INTEGER_VAL(name))
     DO_INT(ORANGE_OPEN_BLUE_NEW_LOCATION);
