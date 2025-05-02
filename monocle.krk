@@ -1,0 +1,62 @@
+import vkuroko as vkrk
+from vkuroko import ConVar, ConCommand
+import monocle
+import os
+
+let monocle_portal = ConVar("monocle_portal", "blue", "Portal for monocle_scan")
+let monocle_image_path = ConVar("monocle_image_path", "out.tga", "Image output path for monocle_scan")
+let monocle_image_y_res = ConVar("monocle_image_y_res", 1000, "Image y_res monocle_scan", min_value=1)
+
+@ConCommand
+def monocle_scan(arg):
+    """Create overlay portal image"""
+    let portals_list = vkrk.get_portals()
+    if portals_list is None:
+        print("No server")
+        return
+
+    let portals = {p.index: p for p in portals_list}
+
+    let selected_portal = monocle_portal.get_string()
+
+    let blue = None
+    let orange = None
+    let from_blue = None
+
+    try:
+        if selected_portal == "blue":
+            for k, v in portals.items():
+                if not v.is_orange and v.is_open and v.linked_index is not None:
+                    blue = v
+                    orange = portals[v.linked_index]
+                    from_blue = True
+                    break
+        elif selected_portal == "orange":
+            for k, v in portals.items():
+                if v.is_orange and v.is_open and v.linked_index is not None:
+                    orange = v
+                    blue = portals[v.linked_index]
+                    from_blue = False
+                    break
+        else:
+            let index = int(selected_portal)
+            let p = portals[index]
+            let linked = portals[p.linked_index]
+
+            if p.is_open and linked.is_open:
+                from_blue = not p.is_orange
+                if from_blue:
+                    blue, orange = p, linked
+                else:
+                    orange, blue = p, linked
+    except:
+        blue = orange = None
+
+    if blue is None or orange is None:
+        print("Cannot find portal pair")
+
+    print(f"Blue index: {blue.index}\n"
+          f"Orange index: {orange.index}")
+    let file_name = vkrk.get_game_dir() + os.sep + monocle_image_path.get_string()
+    monocle.create_image(blue, orange, file_name, monocle_image_y_res.get_int(), from_blue)
+    print(f"Output image at {file_name}")
