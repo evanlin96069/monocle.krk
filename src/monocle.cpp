@@ -15,7 +15,7 @@
 
 #include <vector>
 
-static void _CreateOverlayPortalImage(const PortalPair& pair,
+static void CreateOverlayPortalImage(const PortalPair& pair,
                                       const char* file_name,
                                       size_t y_res,
                                       bool from_blue,
@@ -94,5 +94,26 @@ extern "C" void CreateOverlayPortalImage(Vector blue_pos,
         orange_ang,
     };
     pp.CalcTpMatrices((PlacementOrder)order);
-    _CreateOverlayPortalImage(pp, file_name, y_res, from_blue);
+    CreateOverlayPortalImage(pp, file_name, y_res, from_blue);
+}
+
+extern "C" void CreateOverlayPortalImageMatrices(Vector blue_pos,
+                                                   QAngle blue_ang,
+                                                   Vector orange_pos,
+                                                   QAngle orange_ang,
+                                                   VMatrix b_to_o,
+                                                   VMatrix o_to_b,
+                                                   const char* file_name,
+                                                   int y_res,
+                                                   int from_blue)
+{
+    PortalPair pp{
+        blue_pos,
+        blue_ang,
+        orange_pos,
+        orange_ang,
+    };
+    pp.b_to_o = b_to_o;
+    pp.o_to_b = o_to_b;
+    CreateOverlayPortalImage(pp, file_name, y_res, from_blue);
 }
