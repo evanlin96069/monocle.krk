@@ -18,6 +18,16 @@ def monocle_scan(arg):
     let portals = {p.index: p for p in portals_list}
 
     let selected_portal = monocle_portal.get_string()
+    selected_portal = selected_portal.lower()
+
+    if selected_portal == "overlay":
+        let spt_overlay_portal = vkrk.find_var("spt_overlay_portal")
+        if spt_overlay_portal is not None:
+            selected_portal = spt_overlay_portal.get_string()
+            selected_portal = selected_portal.lower()
+        else:
+            print("Cannot find spt_overaly_portal")
+            return
 
     let blue = None
     let orange = None
@@ -54,9 +64,11 @@ def monocle_scan(arg):
 
     if blue is None or orange is None:
         print("Cannot find portal pair")
+        return
 
-    print(f"Blue index: {blue.index}\n"
-          f"Orange index: {orange.index}")
     let file_name = vkrk.get_game_dir() + os.sep + monocle_image_path.get_string()
     monocle.create_image(blue, orange, file_name, monocle_image_y_res.get_int(), from_blue)
-    print(f"Output image at {file_name}")
+    print(f"From portal: {selected_portal}\n"
+          f"Blue index: {blue.index}\n"
+          f"Orange index: {orange.index}\n"
+          f"Output image at {file_name}")
