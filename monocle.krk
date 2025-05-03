@@ -6,6 +6,13 @@ import os
 let monocle_portal = ConVar("monocle_portal", "blue", "Portal for monocle_scan")
 let monocle_image_path = ConVar("monocle_image_path", "out.tga", "Image output path for monocle_scan")
 let monocle_image_y_res = ConVar("monocle_image_y_res", 1000, "Image y_res monocle_scan", min_value=1)
+let monocle_order = ConVar("monocle_order", "auto",
+                           "Portal placement order for monocle_scan\n"
+                           "Valid options are:\n"
+                           " - auto: Use the portal matrices from the game\n"
+                           " - 0: BLUE_UPTM\n"
+                           " - 1: ORANGE_UPTM\n"
+                           " - 2: ULM")
 
 @ConCommand
 def monocle_scan(arg):
@@ -66,9 +73,17 @@ def monocle_scan(arg):
         print("Cannot find portal pair")
         return
 
+    let order = None
+    if (monocle_order.get_string() != "auto"):
+        order = monocle_order.get_int()
+        if (order != 0 and order != 1 and order != 2):
+            print("Invalid placement order")
+            return
+
     let file_name = vkrk.get_game_dir() + os.sep + monocle_image_path.get_string()
-    monocle.create_image(blue, orange, file_name, monocle_image_y_res.get_int(), from_blue)
+    monocle.create_image(blue, orange, file_name, monocle_image_y_res.get_int(), from_blue, order)
     print(f"From portal: {selected_portal}\n"
+          f"Order: {'auto' if order is None else order}\n"
           f"Blue index: {blue.index}\n"
           f"Orange index: {orange.index}\n"
           f"Output image at {file_name}")
