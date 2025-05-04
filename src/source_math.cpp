@@ -14,17 +14,6 @@ void __cdecl Portal_CalcPlane(const Vector* portal_pos, const Vector* portal_f, 
 bool __cdecl Portal_EntBehindPlane(const VPlane* portal_plane, const Vector* ent_center);
 }
 
-void SyncFloatingPointControlWord(void)
-{
-    // 0x9001f (default msvc settings) - mask all exceptions, near rounding, 53 bit mantissa precision, projective infinity
-    errno_t err =
-        _controlfp_s(nullptr,
-                     (_EM_INEXACT | _EM_UNDERFLOW | _EM_OVERFLOW | _EM_ZERODIVIDE | _EM_INVALID | _EM_DENORMAL) |
-                         (_RC_NEAR | _PC_53 | _IC_PROJECTIVE),
-                     ~0);
-    assert(!err);
-}
-
 static void AngleMatrix(const QAngle* angles, const Vector* position, matrix3x4_t* matrix)
 {
     AngleMatrix(angles, matrix);

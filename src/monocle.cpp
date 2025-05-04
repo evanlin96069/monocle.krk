@@ -21,6 +21,8 @@ static void CreateOverlayPortalImage(const PortalPair& pair,
                                       bool from_blue,
                                       bool rand_nudge = false)
 {
+    ScopedFPControl control_scope;
+
     TIME_FUNC();
 
     const Portal& p = from_blue ? pair.blue : pair.orange;

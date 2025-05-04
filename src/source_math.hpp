@@ -13,11 +13,32 @@
 #define PORTAL_HALF_HEIGHT 54.0f
 #define PORTAL_HOLE_DEPTH 500.f
 
-extern "C" void SyncFloatingPointControlWord(void);
-
 #ifdef _DEBUG
 #define DEBUG_NAN_CTORS
 #endif
+
+class ScopedFPControl {
+public:
+    ScopedFPControl()
+    {
+        // 0x9001f (default msvc settings) - mask all exceptions, near rounding, 53 bit mantissa precision, projective infinity
+        errno_t err =
+            _controlfp_s(&orig_control,
+                         (_EM_INEXACT | _EM_UNDERFLOW | _EM_OVERFLOW | _EM_ZERODIVIDE | _EM_INVALID | _EM_DENORMAL) |
+                             (_RC_NEAR | _PC_53 | _IC_PROJECTIVE),
+                         ~0);
+        assert(!err);
+    }
+
+    ~ScopedFPControl()
+    {
+        errno_t err = _controlfp_s(nullptr, orig_control, ~0);
+        assert(!err);
+    }
+
+private:
+    unsigned int orig_control;
+};
 
 template <size_t R, size_t C>
 static void PrintMatrix(const float (&arr)[R][C])

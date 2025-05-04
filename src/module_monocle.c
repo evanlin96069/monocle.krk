@@ -147,8 +147,6 @@ KRK_Function(create_image)
 
 KRK_Module(monocle)
 {
-    SyncFloatingPointControlWord();
-
     KRK_DOC(module, "@brief Reproducing the Vertical Angle Glitch (VAG) bug in Portal.");
 
     KRK_DOC(BIND_FUNC(module, create_image),
