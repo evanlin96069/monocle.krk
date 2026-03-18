@@ -1,3 +1,6 @@
+> [!WARNING]
+> Project is obsolete. See https://github.com/OutOfBoundsOffice/SourcePauseTool/pull/450
+
 # monocle.krk
 
 [Monocle](https://github.com/UncraftedName/Monocle) bindings for [vkuroko](https://github.com/evanlin96069/vkuroko)
